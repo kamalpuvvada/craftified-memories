@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import logo from './logo.jpeg'; // Import your logo
+import logo from './logo.jpeg';
 
 const App = () => {
   const [products, setProducts] = useState([]);
@@ -13,10 +13,106 @@ const App = () => {
     price: '',
     description: '',
     category: '',
-    images: [], // Changed from single image to array
-    imagePreviews: [] // Changed from single preview to array
+    images: [],
+    imagePreviews: []
   });
 
+  // Image Carousel Component for Product Cards
+  const ImageCarousel = ({ images, productName }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const nextImage = () => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const prevImage = () => {
+      setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
+    // Handle touch/swipe events
+    const handleTouchStart = (e) => {
+      const touchStartX = e.touches[0].clientX;
+      e.target.setAttribute('data-touch-start', touchStartX);
+    };
+
+    const handleTouchEnd = (e) => {
+      const touchStartX = parseFloat(e.target.getAttribute('data-touch-start'));
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+
+      // Swipe threshold (minimum distance for swipe)
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          nextImage(); // Swipe left - next image
+        } else {
+          prevImage(); // Swipe right - previous image
+        }
+      }
+    };
+
+    if (!images || images.length === 0) {
+      return (
+        <div className="product-placeholder">
+          <div className="placeholder-icon">📦</div>
+        </div>
+      );
+    }
+
+    if (images.length === 1) {
+      return (
+        <img
+          src={images[0]}
+          alt={productName}
+          className="product-image"
+        />
+      );
+    }
+
+    return (
+      <div className="image-carousel-container">
+        <img
+          src={images[currentIndex]}
+          alt={`${productName} ${currentIndex + 1}`}
+          className="product-image carousel-image"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        />
+
+        {/* Navigation Arrows - Only show if multiple images */}
+        <button
+          className="carousel-nav-btn prev-btn"
+          onClick={prevImage}
+          aria-label="Previous image"
+        >
+          ‹
+        </button>
+        <button
+          className="carousel-nav-btn next-btn"
+          onClick={nextImage}
+          aria-label="Next image"
+        >
+          ›
+        </button>
+
+        {/* Image Dots Indicator */}
+        <div className="carousel-dots">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              className={`carousel-dot ${index === currentIndex ? 'active' : ''}`}
+              onClick={() => setCurrentIndex(index)}
+              aria-label={`Go to image ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Image Counter */}
+        <div className="image-counter">
+          {currentIndex + 1}/{images.length}
+        </div>
+      </div>
+    );
+  };
 
   const categories = ['Cake Toppers', 'Banners', 'Shadow Boxes', 'Photo Frames', 'Fridge Magnets', 'Puzzles', 'Return Gifts'];
 
@@ -54,7 +150,6 @@ const App = () => {
     }));
   };
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingProduct) {
@@ -81,12 +176,11 @@ const App = () => {
       price: '',
       description: '',
       category: '',
-      images: [], // Reset to empty array
-      imagePreviews: [] // Reset to empty array
+      images: [],
+      imagePreviews: []
     });
     setShowAddForm(false);
   };
-
 
   const handleEdit = (product) => {
     setFormData({
@@ -100,7 +194,6 @@ const App = () => {
     setEditingProduct(product);
     setShowAddForm(true);
   };
-
 
   const handleDelete = (productId) => {
     if (window.confirm('Are you sure you want to remove this product?')) {
@@ -152,7 +245,6 @@ const App = () => {
               Add Product
             </button>
           </div>
-
         </div>
       </header>
 
@@ -172,15 +264,15 @@ const App = () => {
             <div className="features-grid">
               <div className="feature-card">
                 <h4>Personalized</h4>
-                <p>Every design is made just for you</p>
+                <p>– every design is made just for you</p>
               </div>
               <div className="feature-card">
                 <h4>Handcrafted with care</h4>
-                <p>Using premium papers, durable materials, and fine detailing</p>
+                <p>– using premium papers, durable materials, and fine detailing</p>
               </div>
               <div className="feature-card">
                 <h4>Versatile & creative</h4>
-                <p>Perfect for birthdays, weddings, anniversaries, newborn milestones, festive occasions, or as thoughtful return gifts</p>
+                <p>– perfect for birthdays, weddings, anniversaries, newborn milestones, festive occasions, or as thoughtful return gifts</p>
               </div>
             </div>
           </div>
@@ -189,6 +281,39 @@ const App = () => {
             <p>Our mission is simple: to craft your memories into lasting keepsakes — gifts and décor that not only look beautiful but also hold a special meaning for you and your loved ones.</p>
             <h3 className="celebration-text">🌸 Celebrate. Decorate. Cherish. 🌸</h3>
             <p className="tagline">Because every memory deserves to be Craftified</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Filter Section */}
+      <section className="filter-section">
+        <div className="filter-container">
+          <div className="filter-header">
+            <div className="filter-title">
+              <span className="filter-icon">🔽</span>
+              <h3>Filter by Category</h3>
+            </div>
+            <div className="product-count">
+              📦 {filteredProducts.length} products
+            </div>
+          </div>
+
+          <div className="category-filters">
+            <button
+              className={`filter-btn ${selectedCategories.length === 0 ? 'active' : ''}`}
+              onClick={() => setSelectedCategories([])}
+            >
+              All Products
+            </button>
+            {categories.map(category => (
+              <button
+                key={category}
+                className={`filter-btn ${selectedCategories.includes(category) ? 'active' : ''}`}
+                onClick={() => handleCategoryFilter(category)}
+              >
+                {category}
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -234,6 +359,8 @@ const App = () => {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
               />
+
+              {/* Multiple Images Upload */}
               <div className="file-upload-section">
                 <label htmlFor="images" className="file-upload-label">
                   📸 Select Images (Multiple)
@@ -251,10 +378,35 @@ const App = () => {
               {formData.imagePreviews.length > 0 && (
                 <div className="image-thumbnails">
                   <h4>Selected Images ({formData.imagePreviews.length})</h4>
-                  <div className="thumbnail-grid">
+                  <div
+                    className="thumbnail-grid"
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                      maxHeight: '120px',
+                      overflowY: 'auto',
+                      padding: '8px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px'
+                    }}
+                  >
                     {formData.imagePreviews.map((preview, index) => (
                       <div key={index} className="thumbnail-item">
-                        <img src={preview} alt={`Preview ${index + 1}`} className="thumbnail-image" />
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="thumbnail-image"
+                          style={{
+                            width: '60px',
+                            height: '60px',
+                            objectFit: 'cover',
+                            borderRadius: '6px',
+                            border: '2px solid #e5e7eb',
+                            display: 'block'
+                          }}
+                        />
                         <button
                           type="button"
                           className="remove-thumb-btn"
@@ -282,42 +434,7 @@ const App = () => {
         </div>
       )}
 
-      {/* Filter Section - Simplified Structure */}
-      <section className="filter-section">
-        <div className="filter-container">
-          <div className="filter-header">
-            <div className="filter-title">
-              <span className="filter-icon">🔽</span>
-              <h3>Filter by Category</h3>
-            </div>
-            <div className="product-count">
-              📦 {filteredProducts.length} products
-            </div>
-          </div>
-
-          <div className="category-filters">
-            <button
-              className={`filter-btn ${selectedCategories.length === 0 ? 'active' : ''}`}
-              onClick={() => setSelectedCategories([])}
-            >
-              All Products
-            </button>
-            {categories.map(category => (
-              <button
-                key={category}
-                className={`filter-btn ${selectedCategories.includes(category) ? 'active' : ''}`}
-                onClick={() => handleCategoryFilter(category)}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-
-
-      {/* Products Section - Separate */}
+      {/* Products Section */}
       <section className="products-section">
         <div className="container">
           <div className="products-grid">
@@ -339,15 +456,14 @@ const App = () => {
                       </button>
                     </div>
                   </div>
+                  {/* Inside your product card mapping */}
                   <div className="product-image-container">
-                    {product.imagePreview ? (
-                      <img src={product.imagePreview} alt={product.name} className="product-image" />
-                    ) : (
-                      <div className="product-placeholder">
-                        <div className="placeholder-icon">📦</div>
-                      </div>
-                    )}
+                    <ImageCarousel
+                      images={product.imagePreviews || []}
+                      productName={product.name}
+                    />
                   </div>
+
                   <div className="product-info">
                     <h4 className="product-name">{product.name}</h4>
                     <p className="product-description">{product.description}</p>
@@ -362,7 +478,6 @@ const App = () => {
           </div>
         </div>
       </section>
-
 
       {/* Footer */}
       <footer className="footer">
