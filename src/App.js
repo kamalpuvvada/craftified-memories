@@ -13,9 +13,10 @@ const App = () => {
     price: '',
     description: '',
     category: '',
-    image: null,
-    imagePreview: ''
+    images: [], // Changed from single image to array
+    imagePreviews: [] // Changed from single preview to array
   });
+
 
   const categories = ['Cake Toppers', 'Banners', 'Shadow Boxes', 'Photo Frames', 'Fridge Magnets', 'Puzzles', 'Return Gifts'];
 
@@ -29,20 +30,30 @@ const App = () => {
     }
   }, [products, selectedCategories]);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  const handleMultipleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+
+    files.forEach(file => {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setFormData({
-          ...formData,
-          image: file,
-          imagePreview: e.target.result
-        });
+      reader.onload = (event) => {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, file],
+          imagePreviews: [...prev.imagePreviews, event.target.result]
+        }));
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
+
+  const removeImage = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove),
+      imagePreviews: prev.imagePreviews.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -70,11 +81,12 @@ const App = () => {
       price: '',
       description: '',
       category: '',
-      image: null,
-      imagePreview: ''
+      images: [], // Reset to empty array
+      imagePreviews: [] // Reset to empty array
     });
     setShowAddForm(false);
   };
+
 
   const handleEdit = (product) => {
     setFormData({
@@ -82,12 +94,13 @@ const App = () => {
       price: product.price.toString(),
       description: product.description,
       category: product.category,
-      image: product.image,
-      imagePreview: product.imagePreview
+      images: product.images || [],
+      imagePreviews: product.imagePreviews || []
     });
     setEditingProduct(product);
     setShowAddForm(true);
   };
+
 
   const handleDelete = (productId) => {
     if (window.confirm('Are you sure you want to remove this product?')) {
@@ -221,15 +234,41 @@ const App = () => {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
               />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                required={!editingProduct}
-              />
-              {formData.imagePreview && (
-                <img src={formData.imagePreview} alt="Preview" className="image-preview" />
+              <div className="file-upload-section">
+                <label htmlFor="images" className="file-upload-label">
+                  📸 Select Images (Multiple)
+                </label>
+                <input
+                  id="images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleMultipleImageUpload}
+                  className="file-input"
+                />
+              </div>
+
+              {formData.imagePreviews.length > 0 && (
+                <div className="image-thumbnails">
+                  <h4>Selected Images ({formData.imagePreviews.length})</h4>
+                  <div className="thumbnail-grid">
+                    {formData.imagePreviews.map((preview, index) => (
+                      <div key={index} className="thumbnail-item">
+                        <img src={preview} alt={`Preview ${index + 1}`} className="thumbnail-image" />
+                        <button
+                          type="button"
+                          className="remove-thumb-btn"
+                          onClick={() => removeImage(index)}
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
+
               <div className="form-buttons">
                 <button type="submit" className="submit-btn">
                   {editingProduct ? 'Save Changes' : 'Add Product'}

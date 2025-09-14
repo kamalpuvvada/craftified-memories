@@ -520,15 +520,16 @@ body {
 @media (max-width: 768px) {
   .filter-section {
     margin: 20px 15px;
-    max-width: none; /* Allow full width on mobile */
+    max-width: none;
+    /* Allow full width on mobile */
   }
-  
+
   .filter-container {
     padding: 30px 20px;
     border-radius: 16px;
     border-width: 2px;
   }
-  
+
   .filter-header {
     flex-direction: column;
     align-items: flex-start;
@@ -540,7 +541,7 @@ body {
   .filter-section {
     margin: 15px 10px;
   }
-  
+
   .filter-container {
     padding: 25px 15px;
     border-radius: 12px;
@@ -560,10 +561,13 @@ body {
 
 /* Inner content area with reversed background */
 .filter-content {
-  background: linear-gradient(135deg, #fef7f0 0%, #fdf2e9 100%); /* Peach background inside */
+  background: linear-gradient(135deg, #fef7f0 0%, #fdf2e9 100%);
+  /* Peach background inside */
   padding: 36px 26px;
-  border-radius: 20px; /* Slightly smaller radius for inner content */
-  border: 1px solid #fde4d3; /* Subtle inner border */
+  border-radius: 20px;
+  /* Slightly smaller radius for inner content */
+  border: 1px solid #fde4d3;
+  /* Subtle inner border */
 }
 
 /* Filter Section - Fixed Background Colors & Max-Width */
@@ -571,14 +575,17 @@ body {
   background: transparent;
   padding: 0;
   margin: 40px auto;
-  max-width: 1200px; /* Set max-width as requested */
+  max-width: 1200px;
+  /* Set max-width as requested */
 }
 
 .filter-container {
-  background: #ffffff; /* White container background */
+  background: #ffffff;
+  /* White container background */
   padding: 40px 30px;
   border-radius: 20px;
-  border: 2px solid #fde4d3; /* Subtle inner border */
+  border: 2px solid #fde4d3;
+  /* Subtle inner border */
   box-shadow: 0 4px 20px rgba(255, 107, 53, 0.1);
   position: relative;
 }
@@ -626,7 +633,8 @@ body {
 .filter-btn {
   padding: 8px 16px;
   border: 1px solid #fde4d3;
-  background: linear-gradient(135deg, #fef7f0 0%, #fdf2e9 100%); /* Page background color */
+  background: linear-gradient(135deg, #fef7f0 0%, #fdf2e9 100%);
+  /* Page background color */
   color: #6b7280;
   border-radius: 6px;
   font-size: 14px;
@@ -638,13 +646,15 @@ body {
 .filter-btn:hover {
   border-color: #ff6b35;
   color: #ff6b35;
-  background: linear-gradient(135deg, #fdf2e9 0%, #fcebe3 100%); /* Slightly darker on hover */
+  background: linear-gradient(135deg, #fdf2e9 0%, #fcebe3 100%);
+  /* Slightly darker on hover */
 }
 
 .filter-btn.active {
   background-color: #ff6b35;
   border-color: #ff6b35;
-  color: #451a03; /* Dark chocolate brown */
+  color: #451a03;
+  /* Dark chocolate brown */
 }
 
 /* Products Grid */
@@ -965,5 +975,176 @@ body {
       border-radius: 12px;
     }
   }
+
+  /* File Upload Styles */
+  .file-upload-section {
+    margin: 16px 0;
+  }
+
+  .file-upload-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #ff6b35 0%, #ff5722 100%);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .file-upload-label:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  /* Thumbnail Styles */
+  .image-thumbnails {
+    margin: 16px 0;
+  }
+
+  .image-thumbnails h4 {
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .thumbnail-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+
+  .thumbnail-item {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .thumbnail-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s ease;
+  }
+
+  .thumbnail-item:hover .thumbnail-image {
+    border-color: #ff6b35;
+  }
+
+  .remove-thumb-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+  }
+
+  .remove-thumb-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .thumbnail-grid {
+      max-height: 100px;
+    }
+
+    .thumbnail-image {
+      width: 50px;
+      height: 50px;
+    }
+
+    .remove-thumb-btn {
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+    }
+  }
+
+  /* Override any existing image preview styles */
+  .image-preview {
+    display: none !important;
+  }
+
+  .product-form .image-preview {
+    display: none !important;
+  }
+
+  /* Force thumbnail styles */
+  .thumbnail-image {
+    width: 60px !important;
+    height: 60px !important;
+    max-width: 60px !important;
+    max-height: 60px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+    border: 2px solid #e5e7eb !important;
+    display: block !important;
+  }
+
+  .thumbnail-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    max-height: 120px !important;
+    overflow-y: auto !important;
+    padding: 8px !important;
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+  }
+
+  .thumbnail-item {
+    position: relative !important;
+    flex-shrink: 0 !important;
+  }
+
+  .remove-thumb-btn {
+    position: absolute !important;
+    top: -6px !important;
+    right: -6px !important;
+    background: #ef4444 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    z-index: 10 !important;
+  }
+
+
 
 }
