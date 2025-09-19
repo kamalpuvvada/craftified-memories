@@ -514,7 +514,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 10;
   transition: all 0.2s ease;
 }
@@ -676,27 +676,22 @@ body {
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
-/* FIXED Large Image Styles - Show Full Image Using Available Height */
 .product-image-large {
   max-height: 100%;
   max-width: 100%;
-  height: auto;
-  width: auto;
   object-fit: contain;
-  border-radius: 12px;
-  background: #f9fafb;
+  display: block;
+  margin: auto;
 }
 
 .image-carousel-container-large {
-  position: relative;
-  width: 100%;
   height: 100%;
-  border-radius: 12px;
-  background: #f9fafb;
-  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #f9fafb;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 /* Navigation Buttons - Properly positioned inside container */
@@ -1138,7 +1133,7 @@ body {
     margin: 20px 15px;
     max-width: none;
   }
-  
+
   .filter-container {
     padding: 30px 20px;
     border-radius: 16px;
@@ -1160,11 +1155,11 @@ body {
     height: 32px;
     font-size: 16px;
   }
-  
+
   .prev-btn {
     left: 8px;
   }
-  
+
   .next-btn {
     right: 8px;
   }
@@ -1176,17 +1171,13 @@ body {
   }
 
   .product-detail-content {
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-    height: auto;
+    height: calc(90vh - 80px);
+    /* use full modal height */
   }
 
   .product-detail-images {
-    order: 1;
-    flex: none;
-    height: 60vh;
-    min-height: 300px;
+    /* ...already flex and height 100%... */
+    height: 100%;
   }
 
   .product-detail-info {
@@ -1233,7 +1224,7 @@ body {
   .filter-section {
     margin: 15px 10px;
   }
-  
+
   .filter-container {
     padding: 25px 15px;
     border-radius: 12px;
@@ -1255,9 +1246,10 @@ body {
   }
 
   .carousel-nav-btn {
-    opacity: 0.6; /* Show arrows on mobile by default */
+    opacity: 0.6;
+    /* Show arrows on mobile by default */
   }
-  
+
   .product-card:hover .carousel-nav-btn {
     opacity: 1;
   }
