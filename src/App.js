@@ -1,3 +1,6 @@
+import { Buffer } from "buffer";
+window.Buffer = Buffer;
+
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import logo from './logo.jpeg';
