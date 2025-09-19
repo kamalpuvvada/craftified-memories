@@ -1,7 +1,7 @@
 import { CosmosClient } from '@azure/cosmos';
 
-const endpoint = 'https://craftified-products-db.documents.azure.com:443/';
-const key = 'pfywuw03kxrKSxgebaB77qAdvqL2filK8JoU8zhKJLv7fNEEUyWhu39RQD1qpo9IB8LsFfi3lU5NACDblkoibQ==';
+const endpoint = process.env.REACT_APP_COSMOS_ENDPOINT;
+const key = process.env.REACT_APP_COSMOS_KEY;
 const databaseId = 'CraftifiedMemories';
 const containerId = 'Products';
 
