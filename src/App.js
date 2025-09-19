@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import logo from './logo.jpeg';
-// Import Azure services
-import { uploadToBlobStorage } from './services/azureStorage';
-import { saveProductToAzure, getAllProductsFromAzure, deleteProductFromAzure } from './services/azureDatabase';
-
 
 // Image Carousel Component (supports both small and large views)
 const ImageCarousel = ({ images, productName, isLarge = false }) => {
@@ -154,41 +150,20 @@ const App = () => {
     }
   }, [showProductModal]);
 
-  // NEW: Load products from Azure Cosmos DB on app startup
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const products = await getAllProductsFromAzure();
-        setProducts(products);
-        console.log('✅ Products loaded from Azure:', products.length);
-      } catch (error) {
-        console.error('❌ Error loading products from Azure:', error);
-        // Fallback to empty array if Azure fails
-        setProducts([]);
-      }
-    };
-
-    loadProducts();
-  }, []); // Empty dependency array = runs once when component mounts
-
-  const handleMultipleImageUpload = async (e) => {
+  const handleMultipleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const uploadedUrls = [];
 
-    for (const file of files) {
-      try {
-        const url = await uploadToBlobStorage(file);
-        uploadedUrls.push(url);
-      } catch (error) {
-        console.error('Error uploading image:', error);
-      }
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...files],
-      imagePreviews: [...prev.imagePreviews, ...uploadedUrls]
-    }));
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, file],
+          imagePreviews: [...prev.imagePreviews, event.target.result]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const removeImage = (indexToRemove) => {
@@ -199,27 +174,24 @@ const App = () => {
     }));
   };
 
-  // Update handleSubmit to save to Azure
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    try {
-      const productData = {
+    if (editingProduct) {
+      setProducts(products.map(product =>
+        product.id === editingProduct.id
+          ? { ...formData, id: editingProduct.id }
+          : product
+      ));
+      setEditingProduct(null);
+    } else {
+      const newProduct = {
         ...formData,
-        id: editingProduct ? editingProduct.id : Date.now().toString(),
+        id: Date.now(),
         price: parseFloat(formData.price)
       };
-
-      await saveProductToAzure(productData);
-
-      // Reload products from Azure
-      const products = await getAllProductsFromAzure();
-      setProducts(products);
-
-      resetForm();
-    } catch (error) {
-      console.error('Error saving product:', error);
+      setProducts([...products, newProduct]);
     }
+    resetForm();
   };
 
   const resetForm = () => {
