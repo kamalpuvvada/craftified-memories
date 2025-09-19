@@ -576,12 +576,13 @@ body {
   display: flex;
   gap: 24px;
   padding: 24px;
-  height: calc(90vh - 80px); /* Subtract header height */
+  /* height: calc(90vh - 80px); Subtract header height */
 }
 
 .product-detail-images {
   flex: 1.2;
   min-width: 0;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
