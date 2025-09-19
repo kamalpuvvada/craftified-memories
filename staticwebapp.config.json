@@ -7,6 +7,10 @@
     }
   ],
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/index.html",
+    "exclude": ["/images/*.{png,jpg,gif,ico,svg}", "/css/*", "/js/*", "/*.{css,js,png,jpg,gif,ico,svg}"]
+  },
+  "mimeTypes": {
+    ".json": "application/json"
   }
 }

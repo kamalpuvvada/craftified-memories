@@ -2,6 +2,7 @@
   "name": "craftified-memories",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@azure/cosmos": "^4.5.1",
     "@azure/storage-blob": "^12.28.0",
