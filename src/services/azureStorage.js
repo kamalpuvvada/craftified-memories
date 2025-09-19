@@ -1,21 +1,22 @@
-import { BlobServiceClient } from '@azure/storage-blob';
 
 const connectionString = process.env.REACT_APP_AZURE_STORAGE_CONNECTION_STRING;
 const containerName = 'product-images';
 
-const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+// ✅ This works in browser
+import { BlobServiceClient } from '@azure/storage-blob';
 
-export const uploadImageToAzure = async (file) => {
+const uploadToBlobStorage = async (file, sasUrl) => {
   try {
-    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blobServiceClient = new BlobServiceClient(sasUrl);
+    const containerClient = blobServiceClient.getContainerClient('products');
     const blobName = `${Date.now()}-${file.name}`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     
-    await blockBlobClient.upload(file, file.size);
-    
-    return blockBlobClient.url; // This is your public image URL
+    await blockBlobClient.uploadData(file);
+    return blockBlobClient.url.split('?')[0];
   } catch (error) {
-    console.error('Error uploading image:', error);
+    console.error('Upload failed:', error);
     throw error;
   }
 };
+

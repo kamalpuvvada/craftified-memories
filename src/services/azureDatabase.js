@@ -1,11 +1,9 @@
-import { CosmosClient } from '@azure/cosmos';
 
 const endpoint = process.env.REACT_APP_COSMOS_ENDPOINT;
 const key = process.env.REACT_APP_COSMOS_KEY;
 const databaseId = 'CraftifiedMemories';
 const containerId = 'Products';
 
-const client = new CosmosClient({ endpoint, key });
 const database = client.database(databaseId);
 const container = database.container(containerId);
 
