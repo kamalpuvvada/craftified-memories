@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import logo from './logo.jpeg';
+// Import Azure services
+import { uploadImageToAzure } from './services/azureStorage';
+import { saveProductToAzure, getAllProductsFromAzure, deleteProductFromAzure } from './services/azureDatabase';
+
 
 // Image Carousel Component (supports both small and large views)
 const ImageCarousel = ({ images, productName, isLarge = false }) => {
@@ -150,20 +154,41 @@ const App = () => {
     }
   }, [showProductModal]);
 
-  const handleMultipleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
+  // NEW: Load products from Azure Cosmos DB on app startup
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const products = await getAllProductsFromAzure();
+        setProducts(products);
+        console.log('✅ Products loaded from Azure:', products.length);
+      } catch (error) {
+        console.error('❌ Error loading products from Azure:', error);
+        // Fallback to empty array if Azure fails
+        setProducts([]);
+      }
+    };
 
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFormData(prev => ({
-          ...prev,
-          images: [...prev.images, file],
-          imagePreviews: [...prev.imagePreviews, event.target.result]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+    loadProducts();
+  }, []); // Empty dependency array = runs once when component mounts
+
+  const handleMultipleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    const uploadedUrls = [];
+
+    for (const file of files) {
+      try {
+        const url = await uploadImageToAzure(file);
+        uploadedUrls.push(url);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, ...files],
+      imagePreviews: [...prev.imagePreviews, ...uploadedUrls]
+    }));
   };
 
   const removeImage = (indexToRemove) => {
@@ -174,24 +199,27 @@ const App = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Update handleSubmit to save to Azure
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingProduct) {
-      setProducts(products.map(product =>
-        product.id === editingProduct.id
-          ? { ...formData, id: editingProduct.id }
-          : product
-      ));
-      setEditingProduct(null);
-    } else {
-      const newProduct = {
+
+    try {
+      const productData = {
         ...formData,
-        id: Date.now(),
+        id: editingProduct ? editingProduct.id : Date.now().toString(),
         price: parseFloat(formData.price)
       };
-      setProducts([...products, newProduct]);
+
+      await saveProductToAzure(productData);
+
+      // Reload products from Azure
+      const products = await getAllProductsFromAzure();
+      setProducts(products);
+
+      resetForm();
+    } catch (error) {
+      console.error('Error saving product:', error);
     }
-    resetForm();
   };
 
   const resetForm = () => {
