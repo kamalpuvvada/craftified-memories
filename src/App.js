@@ -109,6 +109,7 @@ const App = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const isAdmin = true; // Set to true if you want to enable admin UI locally
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -278,12 +279,14 @@ const App = () => {
               </svg>
               Instagram
             </a>
-            <button className="header-btn add-btn" onClick={() => setShowAddForm(true)}>
-              <svg className="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-              </svg>
-              Add Product
-            </button>
+            {isAdmin && (
+              <button className="header-btn add-btn" onClick={() => setShowAddForm(true)}>
+                <svg className="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+                Add Product
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -359,7 +362,7 @@ const App = () => {
       </section>
 
       {/* Add/Edit Product Modal */}
-      {showAddForm && (
+      {showAddForm && isAdmin && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
@@ -521,12 +524,16 @@ const App = () => {
                   <div className="card-header">
                     <span className="category-tag">{product.category}</span>
                     <div className="card-actions">
-                      <button onClick={() => handleEdit(product)} className="action-btn edit-btn">
-                        ✏️
-                      </button>
-                      <button onClick={() => handleDelete(product.id)} className="action-btn delete-btn">
-                        🗑️
-                      </button>
+                      {isAdmin && (
+                        <>
+                          <button onClick={() => handleEdit(product)} className="action-btn edit-btn">
+                            ✏️
+                          </button>
+                          <button onClick={() => handleDelete(product.id)} className="action-btn delete-btn">
+                            🗑️
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div
