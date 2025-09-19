@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import logo from './logo.jpeg';
 // Import Azure services
-import { uploadImageToAzure } from './services/azureStorage';
+import { uploadToBlobStorage } from './services/azureStorage';
 import { saveProductToAzure, getAllProductsFromAzure, deleteProductFromAzure } from './services/azureDatabase';
 
 
@@ -177,7 +177,7 @@ const App = () => {
 
     for (const file of files) {
       try {
-        const url = await uploadImageToAzure(file);
+        const url = await uploadToBlobStorage(file);
         uploadedUrls.push(url);
       } catch (error) {
         console.error('Error uploading image:', error);

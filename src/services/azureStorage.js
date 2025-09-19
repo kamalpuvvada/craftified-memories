@@ -5,7 +5,7 @@ const containerName = 'product-images';
 // ✅ This works in browser
 import { BlobServiceClient } from '@azure/storage-blob';
 
-const uploadToBlobStorage = async (file, sasUrl) => {
+export const uploadToBlobStorage = async (file, sasUrl) => {
   try {
     const blobServiceClient = new BlobServiceClient(sasUrl);
     const containerClient = blobServiceClient.getContainerClient('products');
