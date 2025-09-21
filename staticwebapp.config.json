@@ -1,8 +1,9 @@
 {
   "routes": [
     {
-      "route": "/api/*",
-      "allowedMethods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]
+      "route": "/*",
+      "serve": "/index.html",
+      "statusCode": 200
     }
   ],
   "navigationFallback": {
@@ -14,9 +15,7 @@
       "/*.{css,js,png,jpg,gif,ico,svg,json}"
     ]
   },
-  "responseOverrides": {
-    "404": {
-      "rewrite": "/index.html"
-    }
+  "mimeTypes": {
+    ".json": "application/json"
   }
 }
