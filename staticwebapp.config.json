@@ -1,22 +1,16 @@
 {
   "routes": [
     {
-      "route": "/api/*",
-      "allowedMethods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]
+      "route": "/*",
+      "serve": "/index.html",
+      "statusCode": 200
     }
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": [
-      "/api/*",
-      "/static/*", 
-      "/images/*", 
-      "/*.{css,js,png,jpg,gif,ico,svg,json}"
-    ]
+    "exclude": ["/images/*.{png,jpg,gif,ico,svg}", "/css/*", "/js/*", "/*.{css,js,png,jpg,gif,ico,svg}"]
   },
-  "responseOverrides": {
-    "404": {
-      "rewrite": "/index.html"
-    }
+  "mimeTypes": {
+    ".json": "application/json"
   }
 }

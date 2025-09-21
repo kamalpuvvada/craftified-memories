@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import logo from './logo.jpeg';
-import PhotoUpload from './components/photoUpload';
 
 // Image Carousel Component (supports both small and large views)
 const ImageCarousel = ({ images, productName, isLarge = false }) => {
@@ -329,40 +328,6 @@ const App = () => {
           </div>
         </div>
       </section>
-
-      <section className="admin-section" id="admin" style={{ 
-          backgroundColor: '#f8f9fa', 
-          padding: '4rem 0',
-          borderTop: '1px solid #e9ecef' 
-        }}>
-          <div className="container">
-            <h2 style={{ 
-              textAlign: 'center', 
-              marginBottom: '2rem', 
-              color: '#333',
-              fontSize: '2rem'
-            }}>
-              🛠️ Product Management
-            </h2>
-            <p style={{ 
-              textAlign: 'center', 
-              marginBottom: '3rem', 
-              color: '#666' 
-            }}>
-              Add new products to your Craftified Memories collection
-            </p>
-            
-            <PhotoUpload 
-              onUploadSuccess={(newProduct) => {
-                console.log('✅ Product uploaded successfully:', newProduct);
-                alert(`Product "${newProduct.name}" has been uploaded successfully!`);
-                
-                // Optional: Refresh the products display
-                // You could add the new product to your existing products state here
-              }} 
-            />
-          </div>
-        </section>
 
       {/* Filter Section */}
       <section className="filter-section">
