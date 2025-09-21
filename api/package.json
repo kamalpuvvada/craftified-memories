@@ -5,11 +5,12 @@
     "start": "func start"
   },
   "dependencies": {
-    "@azure/storage-blob": "^12.17.0",
-    "@azure/cosmos": "^4.0.0",
+    "@azure/cosmos": "^4.5.1",
+    "@azure/storage-blob": "^12.28.0",
     "parse-multipart-data": "^1.5.0"
   },
   "devDependencies": {
     "azure-functions-core-tools": "^4.0.0"
   }
 }
+
