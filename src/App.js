@@ -103,6 +103,7 @@ const ImageCarousel = ({ images, productName, isLarge = false }) => {
   );
 };
 
+
 const App = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
