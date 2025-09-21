@@ -8,7 +8,12 @@
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/images/*.{png,jpg,gif,ico,svg}", "/css/*", "/js/*", "/*.{css,js,png,jpg,gif,ico,svg}","/api/"]
+    "exclude": [
+      "/api/*",
+      "/static/*", 
+      "/images/*", 
+      "/*.{css,js,png,jpg,gif,ico,svg,json}"
+    ]
   },
   "mimeTypes": {
     ".json": "application/json"
