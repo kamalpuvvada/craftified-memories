@@ -1,48 +1,114 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>Test Photo Upload</title>
+    <title>Test Photo Upload - Production</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .result { background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .success { border-left: 4px solid #4CAF50; }
+        .error { border-left: 4px solid #f44336; }
+        button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #005a87; }
+        input[type="file"] { margin: 10px 0; }
+    </style>
 </head>
-
 <body>
-    <h2>Test Photo Upload Function</h2>
-
+    <h2>🚀 Production Photo Upload Test</h2>
+    <p>Testing Azure Function deployed to production</p>
+    
     <form id="uploadForm">
         <div>
-            <label for="file">Choose photo:</label>
+            <label for="file">Choose photo to upload:</label><br>
             <input type="file" id="file" name="file" accept="image/*" required>
         </div>
         <br>
-        <button type="submit">Upload Photo</button>
+        <button type="submit">Upload Photo to Azure</button>
     </form>
-
+    
     <div id="result"></div>
 
     <script>
+        const PRODUCTION_URL = 'https://craftified-photos-upload-d9gjembzfjgkhed8.southindia-01.azurewebsites.net/api/upload-photo';
+        
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const formData = new FormData();
+            
+            const resultDiv = document.getElementById('result');
             const fileInput = document.getElementById('file');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="result error">Please select a file first!</div>';
+                return;
+            }
+            
+            const formData = new FormData();
             formData.append('file', fileInput.files[0]);
-
-            document.getElementById('result').innerHTML = 'Uploading...';
-
+            
+            resultDiv.innerHTML = '<div class="result">⏳ Uploading to Azure...</div>';
+            
             try {
-                const response = await fetch('http://localhost:7071/api/upload-photo', {
+                console.log('Uploading to:', PRODUCTION_URL);
+                
+                const response = await fetch(PRODUCTION_URL, {
                     method: 'POST',
                     body: formData
                 });
-
-
+                
+                console.log('Response status:', response.status);
+                
                 const result = await response.json();
-                document.getElementById('result').innerHTML = JSON.stringify(result, null, 2);
+                console.log('Response data:', result);
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Upload Successful!</h3>
+                            <p><strong>File:</strong> ${result.file.name}</p>
+                            <p><strong>Size:</strong> ${(result.file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p><strong>Type:</strong> ${result.file.type}</p>
+                            <p><strong>Image URL:</strong> <a href="${result.file.url}" target="_blank">View Image</a></p>
+                            <p><strong>Database ID:</strong> ${result.file.id}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Upload Failed</h3>
+                            <p><strong>Error:</strong> ${result.error}</p>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+                
             } catch (error) {
-                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+                console.error('Upload error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Network Error</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Check the browser console for more details.</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Test endpoint availability on page load
+        window.addEventListener('load', async () => {
+            try {
+                const testResponse = await fetch(`${PRODUCTION_URL}?name=PageLoadTest`);
+                const testResult = await testResponse.json();
+                console.log('✅ Endpoint test successful:', testResult);
+            } catch (error) {
+                console.error('❌ Endpoint test failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <div class="result error">
+                        <h3>⚠️ Function Endpoint Not Available</h3>
+                        <p>Cannot connect to: <code>${PRODUCTION_URL}</code></p>
+                        <p>Please verify your Azure Function is deployed and running.</p>
+                    </div>
+                `;
             }
         });
     </script>
 </body>
-
 </html>
