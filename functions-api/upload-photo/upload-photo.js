@@ -4,7 +4,7 @@ const { type } = require('@testing-library/user-event/dist/type');
 const multipart = require('parse-multipart-data');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const { CosmosClient } = require('@azure/cosmos');
-const { upload } = require('@testing-library/user-event/dist/upload');
+// const { upload } = require('@testing-library/user-event/dist/upload');
 
 app.http('upload-photo', {
     methods: ['GET', 'POST'],

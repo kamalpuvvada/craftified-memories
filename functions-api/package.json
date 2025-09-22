@@ -2,7 +2,7 @@
   "name": "craftified-functions",
   "version": "1.0.0",
   "description": "",
-  "main": "src/functions/*.js",
+  "main": "upload-photo/*.js",
   "scripts": {
     "start": "func start",
     "test": "echo \"No tests yet...\""

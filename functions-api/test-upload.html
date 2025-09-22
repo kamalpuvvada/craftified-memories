@@ -28,6 +28,7 @@
     <div id="result"></div>
 
     <script>
+        // const PRODUCTION_URL = 'http://localhost:7071/api/upload-photo';
         const PRODUCTION_URL = 'https://craftified-photos-upload-d9gjembzfjgkhed8.southindia-01.azurewebsites.net/api/upload-photo';
         
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
@@ -93,22 +94,22 @@
         });
         
         // Test endpoint availability on page load
-        window.addEventListener('load', async () => {
-            try {
-                const testResponse = await fetch(`${PRODUCTION_URL}?name=PageLoadTest`);
-                const testResult = await testResponse.json();
-                console.log('✅ Endpoint test successful:', testResult);
-            } catch (error) {
-                console.error('❌ Endpoint test failed:', error);
-                document.getElementById('result').innerHTML = `
-                    <div class="result error">
-                        <h3>⚠️ Function Endpoint Not Available</h3>
-                        <p>Cannot connect to: <code>${PRODUCTION_URL}</code></p>
-                        <p>Please verify your Azure Function is deployed and running.</p>
-                    </div>
-                `;
-            }
-        });
+        // window.addEventListener('load', async () => {
+        //     try {
+        //         const testResponse = await fetch(`${PRODUCTION_URL}?name=PageLoadTest`);
+        //         const testResult = await testResponse.json();
+        //         console.log('✅ Endpoint test successful:', testResult);
+        //     } catch (error) {
+        //         console.error('❌ Endpoint test failed:', error);
+        //         document.getElementById('result').innerHTML = `
+        //             <div class="result error">
+        //                 <h3>⚠️ Function Endpoint Not Available</h3>
+        //                 <p>Cannot connect to: <code>${PRODUCTION_URL}</code></p>
+        //                 <p>Please verify your Azure Function is deployed and running.</p>
+        //             </div>
+        //         `;
+        //     }
+        // });
     </script>
 </body>
 </html>
