@@ -2,252 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import logo from './logo.jpeg';
 
-// Add Product Upload Component
-const AddProduct = ({ onProductAdded, onClose }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    categories: [],
-    price: ''
-  });
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-
-  // Replace with your actual Azure Function URL
-  const AZURE_FUNCTION_URL = 'https://craftified-photos-upload-d9gjembzfjgkhed8.southindia-01.azurewebsites.net/api/upload-photo';
-
-  const availableCategories = [
-    'Cake Toppers', 'Banners', 'Shadow Boxes', 'Photo Frames', 
-    'Magnets', 'Puzzles', 'Return Gifts'
-  ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCategoryToggle = (category) => {
-    setFormData(prev => ({
-      ...prev,
-      categories: prev.categories.includes(category)
-        ? prev.categories.filter(c => c !== category)
-        : [...prev.categories, category]
-    }));
-  };
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        setSelectedFile(file);
-      } else {
-        alert('Please select an image file');
-      }
-    }
-  };
-
-  const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type.startsWith('image/')) {
-        setSelectedFile(file);
-      } else {
-        alert('Please select an image file');
-      }
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.description || !selectedFile || formData.categories.length === 0) {
-      alert('Please fill all required fields and select an image');
-      return;
-    }
-
-    setUploading(true);
-    
-    try {
-      // Upload to Azure
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', selectedFile);
-      
-      const response = await fetch(AZURE_FUNCTION_URL, {
-        method: 'POST',
-        body: uploadFormData
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Create new product object
-        const newProduct = {
-          id: result.file.id,
-          name: formData.name,
-          description: formData.description,
-          categories: formData.categories,
-          price: formData.price,
-          images: [result.file.url], // Azure blob URL
-          uploadedAt: new Date().toISOString()
-        };
-
-        // Add to products list
-        onProductAdded(newProduct);
-        
-        // Reset form
-        setFormData({ name: '', description: '', categories: [], price: '' });
-        setSelectedFile(null);
-        
-        alert('Product added successfully!');
-        onClose();
-      } else {
-        throw new Error(result.error || 'Upload failed');
-      }
-    } catch (error) {
-      console.error('Error uploading product:', error);
-      alert('Error uploading product: ' + error.message);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div className="add-product-modal">
-      <div className="add-product-content">
-        <div className="add-product-header">
-          <h2>Add New Product</h2>
-          <button onClick={onClose} className="close-btn">✕</button>
-        </div>
-        
-        <form onSubmit={handleSubmit}>
-          {/* Product Name */}
-          <div className="form-group">
-            <label>Product Name *</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Enter product name"
-              required
-            />
-          </div>
-
-          {/* Product Description */}
-          <div className="form-group">
-            <label>Description *</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Describe your product"
-              rows="3"
-              required
-            />
-          </div>
-
-          {/* Categories */}
-          <div className="form-group">
-            <label>Categories * (Select at least one)</label>
-            <div className="category-grid">
-              {availableCategories.map(category => (
-                <label key={category} className="category-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.categories.includes(category)}
-                    onChange={() => handleCategoryToggle(category)}
-                  />
-                  <span>{category}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Price */}
-          <div className="form-group">
-            <label>Price (Optional)</label>
-            <input
-              type="text"
-              name="price"
-              value={formData.price}
-              onChange={handleInputChange}
-              placeholder="e.g., ₹500 or Contact for quote"
-            />
-          </div>
-
-          {/* Image Upload */}
-          <div className="form-group">
-            <label>Product Image *</label>
-            <div 
-              className={`file-upload-area ${dragActive ? 'drag-active' : ''}`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                id="file-input"
-                hidden
-              />
-              
-              {selectedFile ? (
-                <div className="file-preview">
-                  <img 
-                    src={URL.createObjectURL(selectedFile)} 
-                    alt="Preview" 
-                    className="preview-image"
-                  />
-                  <p>{selectedFile.name}</p>
-                  <button type="button" onClick={() => setSelectedFile(null)}>
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <label htmlFor="file-input" className="upload-label">
-                  <div className="upload-content">
-                    <span className="upload-icon">📸</span>
-                    <p>Drag & drop your image here</p>
-                    <p>or <span className="browse-link">browse files</span></p>
-                    <small>Supports: JPG, PNG, GIF (Max: 5MB)</small>
-                  </div>
-                </label>
-              )}
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="form-actions">
-            <button type="button" onClick={onClose} disabled={uploading}>
-              Cancel
-            </button>
-            <button type="submit" disabled={uploading}>
-              {uploading ? 'Uploading...' : 'Add Product'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 // Image Carousel Component (supports both small and large views)
 const ImageCarousel = ({ images, productName, isLarge = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -294,314 +48,462 @@ const ImageCarousel = ({ images, productName, isLarge = false }) => {
 
   if (!images || images.length === 0) {
     return (
-      <div className={`carousel-container ${isLarge ? 'large' : 'small'}`}>
-        <div className="carousel-placeholder">
-          <span>No images</span>
-        </div>
+      <div className={isLarge ? "product-placeholder-large" : "product-placeholder"}>
+        <div className="placeholder-icon">📦</div>
       </div>
     );
   }
 
+  if (images.length === 1) {
+    return (
+      <img
+        src={images[0]}
+        alt={productName}
+        className={isLarge ? "product-image-large" : "product-image"}
+        style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', display: 'block', margin: 'auto' }}
+      />
+    );
+  }
+
   return (
-    <div className={`carousel-container ${isLarge ? 'large' : 'small'}`}>
-      <div className="carousel-wrapper">
-        <div 
-          className="carousel-image"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <img 
-            src={images[currentIndex]} 
-            alt={`${productName} - ${currentIndex + 1}`}
-            loading="lazy"
+    <div className={isLarge ? "image-carousel-container-large" : "image-carousel-container"}>
+      <img
+        src={images[currentIndex]}
+        alt={`${productName} ${currentIndex + 1}`}
+        className={isLarge ? "product-image-large" : "product-image"}
+        style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', display: 'block', margin: 'auto' }}
+      />
+
+      <button
+        className="carousel-nav-btn prev-btn"
+        onClick={prevImage}
+        aria-label="Previous image"
+      >
+        ‹
+      </button>
+      <button
+        className="carousel-nav-btn next-btn"
+        onClick={nextImage}
+        aria-label="Next image"
+      >
+        ›
+      </button>
+
+      <div className="mini-dots-indicator">
+        {images.map((_, index) => (
+          <div
+            key={index}
+            className={`mini-dot ${index === currentIndex ? 'active' : ''}`}
+            onClick={(e) => handleDotClick(index, e)}
+            aria-label={`Go to image ${index + 1}`}
           />
-        </div>
-
-        {images.length > 1 && (
-          <>
-            {/* Navigation Arrows */}
-            <button 
-              className="carousel-btn prev" 
-              onClick={prevImage}
-              aria-label="Previous image"
-            >
-              ‹
-            </button>
-            <button 
-              className="carousel-btn next" 
-              onClick={nextImage}
-              aria-label="Next image"
-            >
-              ›
-            </button>
-
-            {/* Dots Indicator */}
-            <div className="carousel-dots">
-              {images.map((_, index) => (
-                <button
-                  key={index}
-                  className={`dot ${index === currentIndex ? 'active' : ''}`}
-                  onClick={(e) => handleDotClick(index, e)}
-                  aria-label={`Go to image ${index + 1}`}
-                />
-              ))}
-            </div>
-          </>
-        )}
+        ))}
       </div>
     </div>
   );
 };
 
-// Main App Component
-function App() {
-  // Product data - You can expand this array
-  const [allProducts, setAllProducts] = useState([
-    // Sample products - these will be replaced with products from Azure
-    {
-      id: 1,
-      name: "Custom Name Cake Topper",
-      description: "Beautiful personalized cake topper made with premium cardstock. Perfect for birthdays and celebrations.",
-      categories: ["Cake Toppers"],
-      images: [
-        "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400",
-        "https://images.unsplash.com/photo-1557925923-cd4648e211a0?w=400"
-      ]
-    },
-    // Add more sample products as needed...
-  ]);
 
+const App = () => {
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const isAdmin = true; // Set to true if you want to enable admin UI locally
+  const [formData, setFormData] = useState({
+    name: '',
+    price: '',
+    description: '',
+    category: '',
+    images: [],
+    imagePreviews: []
+  });
+
+  // Product Detail Modal State
+  const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showAddProduct, setShowAddProduct] = useState(false);
 
-  // Available categories
-  const categories = [
-    'Cake Toppers', 'Banners', 'Shadow Boxes', 
-    'Photo Frames', 'Magnets', 'Puzzles', 'Return Gifts'
-  ];
+  const categories = ['Cake Toppers', 'Banners', 'Shadow Boxes', 'Photo Frames', 'Fridge Magnets', 'Puzzles', 'Return Gifts'];
 
-  // Filter products based on selected categories
-  const filteredProducts = selectedCategories.length === 0 
-    ? allProducts 
-    : allProducts.filter(product => 
-        product.categories.some(category => selectedCategories.includes(category))
-      );
+  useEffect(() => {
+    if (selectedCategories.length === 0) {
+      setFilteredProducts(products);
+    } else {
+      setFilteredProducts(products.filter(product =>
+        selectedCategories.includes(product.category)
+      ));
+    }
+  }, [products, selectedCategories]);
 
-  // Handle category selection
-  const handleCategoryToggle = (category) => {
-    setSelectedCategories(prev => 
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
+  useEffect(() => {
+    if (showProductModal) {
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          setShowProductModal(false);
+          setSelectedProduct(null);
+        }
+      };
+      window.addEventListener('keydown', handleEsc);
+      return () => {
+        window.removeEventListener('keydown', handleEsc);
+      };
+    }
+  }, [showProductModal]);
+
+  const handleMultipleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, file],
+          imagePreviews: [...prev.imagePreviews, event.target.result]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  // Clear all filters
-  const clearFilters = () => {
-    setSelectedCategories([]);
+  const removeImage = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove),
+      imagePreviews: prev.imagePreviews.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
-  // Add Product Handler
-  const handleProductAdded = (newProduct) => {
-    setAllProducts(prev => [newProduct, ...prev]); // Add to beginning of array
-    console.log('New product added:', newProduct);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editingProduct) {
+      setProducts(products.map(product =>
+        product.id === editingProduct.id
+          ? { ...formData, id: editingProduct.id }
+          : product
+      ));
+      setEditingProduct(null);
+    } else {
+      const newProduct = {
+        ...formData,
+        id: Date.now(),
+        price: parseFloat(formData.price)
+      };
+      setProducts([...products, newProduct]);
+    }
+    resetForm();
   };
 
-  // Close modal
-  const closeModal = () => {
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      price: '',
+      description: '',
+      category: '',
+      images: [],
+      imagePreviews: []
+    });
+    setShowAddForm(false);
+  };
+
+  const handleEdit = (product) => {
+    setFormData({
+      name: product.name,
+      price: product.price.toString(),
+      description: product.description,
+      category: product.category,
+      images: product.images || [],
+      imagePreviews: product.imagePreviews || []
+    });
+    setEditingProduct(product);
+    setShowAddForm(true);
+  };
+
+  const handleDelete = (productId) => {
+    if (window.confirm('Are you sure you want to remove this product?')) {
+      setProducts(products.filter(product => product.id !== productId));
+    }
+  };
+
+  const handleCategoryFilter = (category) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter(cat => cat !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+
+  const scrollToHome = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Product Detail Modal Functions
+  const openProductModal = (product) => {
+    setSelectedProduct(product);
+    setShowProductModal(true);
+  };
+
+  const closeProductModal = () => {
+    setShowProductModal(false);
     setSelectedProduct(null);
   };
 
-  // Close modal when clicking outside
-  const handleModalClick = (e) => {
-    if (e.target === e.currentTarget) {
-      closeModal();
-    }
+  const handleWhatsAppInquiry = (product) => {
+    const message = `Hi! I'm interested in "${product.name}" (₹${product.price}). Can you please provide more details?`;
+    const whatsappUrl = `https://wa.me/9550266837?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
-
-  // Handle escape key to close modal
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        closeModal();
-      }
-    };
-
-    if (selectedProduct) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'auto';
-    };
-  }, [selectedProduct]);
 
   return (
     <div className="App">
       {/* Header */}
-      <header className="App-header">
-        <div className="header-content">
-          <img src={logo} alt="Craftified Memories Logo" className="logo" />
-          <div className="header-text">
-            <h1>Craftified Memories</h1>
-            <p className="tagline">Turning moments into memories, crafted with love ✨</p>
+      <header className="header">
+        <div className="container">
+          <div className="logo-section" onClick={scrollToHome}>
+            <img src={logo} alt="Craftified Memories Logo" className="logo-image" />
+            <div className="brand-text">
+              <h1 className="brand-name">Craftified Memories</h1>
+              <p className="brand-tagline">Handcrafted with Love</p>
+            </div>
+          </div>
+          <div className="header-buttons">
+            <a href="https://wa.me/9550266837" target="_blank" rel="noopener noreferrer" className="header-btn whatsapp-btn">
+              <svg className="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488" />
+              </svg>
+              WhatsApp
+            </a>
+            <a href="https://www.instagram.com/craftifiedmemories/" target="_blank" rel="noopener noreferrer" className="header-btn instagram-btn">
+              <svg className="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+              </svg>
+              Instagram
+            </a>
+            {isAdmin && (
+              <button className="header-btn add-btn" onClick={() => setShowAddForm(true)}>
+                <svg className="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+                Add Product
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Admin Section - Add Product Button */}
-      <div className="admin-section">
-        <button 
-          className="add-product-btn"
-          onClick={() => setShowAddProduct(true)}
-        >
-          + Add New Product
-        </button>
-      </div>
+      {/* Hero Section */}
+      <section className="hero">
+        <div className="hero-container">
+          <h2 className="hero-title">Welcome to Craftified Memories ✨</h2>
+          <p className="hero-subtitle">
+            At Craftified Memories, we turn your special moments into treasures you can see, touch, and cherish forever.
+          </p>
+          <p className="hero-description">
+            From personalized cake toppers and banners that make every celebration brighter, to custom shadow boxes, photo frames, fridge magnets, and puzzles that capture memories in unique ways — each piece is carefully designed and crafted with love.
+          </p>
 
-      {/* About Section */}
-      <section className="about-section">
-        <div className="about-content">
-          <h2>About Craftified Memories</h2>
-          <div className="about-text">
-            <p>
-              At <strong>Craftified Memories</strong>, we turn your special moments into treasures you can see, touch, and cherish forever.
-            </p>
-            <p>
-              From personalized cake toppers and banners that make every celebration brighter, to custom shadow boxes, photo frames, fridge magnets, and puzzles that capture memories in unique ways — each piece is carefully designed and crafted with love.
-            </p>
-            <div className="features">
-              <div className="feature">
-                <span className="feature-icon">🎨</span>
-                <span>– every design is made just for you</span>
+          <div className="specialties">
+            <h3 className="specialties-title">We specialize in creating products that are:</h3>
+            <div className="features-grid">
+              <div className="feature-card">
+                <h4>Personalized</h4>
+                <p>– every design is made just for you</p>
               </div>
-              <div className="feature">
-                <span className="feature-icon">⭐</span>
-                <span>– using premium papers, durable materials, and fine detailing</span>
+              <div className="feature-card">
+                <h4>Handcrafted with care</h4>
+                <p>– using premium papers, durable materials, and fine detailing</p>
               </div>
-              <div className="feature">
-                <span className="feature-icon">🎉</span>
-                <span>– perfect for birthdays, weddings, anniversaries, newborn milestones, festive occasions, or as thoughtful return gifts</span>
+              <div className="feature-card">
+                <h4>Versatile & creative</h4>
+                <p>– perfect for birthdays, weddings, anniversaries, newborn milestones, festive occasions, or as thoughtful return gifts</p>
               </div>
             </div>
-            <p className="mission">
-              <strong>Our mission is simple:</strong> to craft your memories into lasting keepsakes — gifts and décor that not only look beautiful but also hold a special meaning for you and your loved ones.
-            </p>
-            <p className="tagline-bottom">
-              <em>Because every memory deserves to be <strong>Craftified</strong> ✨</em>
-            </p>
+          </div>
+
+          <div className="mission-statement">
+            <p>Our mission is simple: to craft your memories into lasting keepsakes — gifts and décor that not only look beautiful but also hold a special meaning for you and your loved ones.</p>
+            <h3 className="celebration-text">🌸 Celebrate. Decorate. Cherish. 🌸</h3>
+            <p className="tagline">Because every memory deserves to be Craftified</p>
           </div>
         </div>
       </section>
 
-      {/* Category Filter */}
+      {/* Filter Section */}
       <section className="filter-section">
-        <h2>Browse Our Creations</h2>
-        <div className="category-filters">
-          {categories.map(category => (
+        <div className="filter-container">
+          <div className="filter-header">
+            <div className="filter-title">
+              <span className="filter-icon">🔽</span>
+              <h3>Filter by Category</h3>
+            </div>
+            <div className="product-count">
+              📦 {filteredProducts.length} products
+            </div>
+          </div>
+
+          <div className="category-filters">
             <button
-              key={category}
-              className={`filter-btn ${selectedCategories.includes(category) ? 'active' : ''}`}
-              onClick={() => handleCategoryToggle(category)}
+              className={`filter-btn ${selectedCategories.length === 0 ? 'active' : ''}`}
+              onClick={() => setSelectedCategories([])}
             >
-              {category}
+              All Products
             </button>
-          ))}
-          
-          {selectedCategories.length > 0 && (
-            <button className="clear-filter-btn" onClick={clearFilters}>
-              Clear All
-            </button>
-          )}
-        </div>
-
-        <div className="filter-info">
-          {selectedCategories.length > 0 && (
-            <p>
-              Showing products in: <strong>{selectedCategories.join(', ')}</strong>
-            </p>
-          )}
-          <p className="product-count">
-            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
-          </p>
-        </div>
-      </section>
-
-      {/* Product Gallery */}
-      <section className="products-section">
-        {filteredProducts.length > 0 ? (
-          <div className="product-grid">
-            {filteredProducts.map(product => (
-              <div 
-                key={product.id} 
-                className="product-card"
-                onClick={() => setSelectedProduct(product)}
+            {categories.map(category => (
+              <button
+                key={category}
+                className={`filter-btn ${selectedCategories.includes(category) ? 'active' : ''}`}
+                onClick={() => handleCategoryFilter(category)}
               >
-                <ImageCarousel 
-                  images={product.images} 
-                  productName={product.name}
-                />
-                
-                <div className="product-info">
-                  <h3>{product.name}</h3>
-                  <p className="product-categories">
-                    {product.categories.join(' • ')}
-                  </p>
-                  {product.price && (
-                    <p className="product-price">{product.price}</p>
-                  )}
-                </div>
-              </div>
+                {category}
+              </button>
             ))}
           </div>
-        ) : (
-          <div className="no-products">
-            <h3>No products found.</h3>
-            <p>
-              {selectedCategories.length > 0 
-                ? 'Try selecting different categories.' 
-                : 'Add your first product to get started!'}
-            </p>
-          </div>
-        )}
+        </div>
       </section>
 
-      {/* Product Modal */}
-      {selectedProduct && (
-        <div className="modal-overlay" onClick={handleModalClick}>
-          <div className="modal-content">
-            <button className="modal-close" onClick={closeModal}>✕</button>
-            
-            <div className="modal-body">
-              <div className="modal-image">
-                <ImageCarousel 
-                  images={selectedProduct.images} 
+      {/* Add/Edit Product Modal */}
+      {showAddForm && isAdmin && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+              <button className="close-btn" onClick={resetForm}>×</button>
+            </div>
+            <form onSubmit={handleSubmit} className="product-form">
+              <input
+                type="text"
+                placeholder="Product Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+              <input
+                type="number"
+                placeholder="Price (₹)"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                required
+                min="0"
+                step="0.01"
+              />
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+              <textarea
+                placeholder="Product Description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                required
+              />
+
+              <div className="file-upload-section">
+                <label htmlFor="images" className="file-upload-label">
+                  📸 Select Images (Multiple)
+                </label>
+                <input
+                  id="images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleMultipleImageUpload}
+                  className="file-input"
+                />
+              </div>
+
+              {formData.imagePreviews.length > 0 && (
+                <div className="image-thumbnails">
+                  <h4>Selected Images ({formData.imagePreviews.length})</h4>
+                  <div className="thumbnail-grid">
+                    {formData.imagePreviews.map((preview, index) => (
+                      <div key={index} className="thumbnail-item">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="thumbnail-image"
+                          style={{
+                            width: '60px',
+                            height: '60px',
+                            objectFit: 'cover',
+                            borderRadius: '6px',
+                            border: '2px solid #e5e7eb',
+                            display: 'block'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="remove-thumb-btn"
+                          onClick={() => removeImage(index)}
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="form-buttons">
+                <button type="submit" className="submit-btn">
+                  {editingProduct ? 'Save Changes' : 'Add Product'}
+                </button>
+                <button type="button" onClick={resetForm} className="cancel-btn">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Product Detail Modal */}
+      {showProductModal && selectedProduct && (
+        <div className="modal-overlay" onClick={closeProductModal}>
+          <div className="modal product-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedProduct.name}</h3>
+              <button className="close-btn" onClick={closeProductModal}>×</button>
+            </div>
+            <div className="product-detail-content">
+              <div className="product-detail-images">
+                <ImageCarousel
+                  images={selectedProduct.imagePreviews || []}
                   productName={selectedProduct.name}
                   isLarge={true}
                 />
               </div>
-              
-              <div className="modal-info">
-                <h2>{selectedProduct.name}</h2>
-                <p className="modal-categories">
-                  {selectedProduct.categories.join(' • ')}
-                </p>
-                
-                <div className="modal-description">
+              <div className="product-detail-info">
+                <div className="product-category">
+                  <span className="category-badge">{selectedProduct.category}</span>
+                </div>
+                <div className="product-price-large">
+                  ₹{selectedProduct.price.toLocaleString()}
+                </div>
+                <div className="product-description-large">
+                  <h4>Description</h4>
                   <p>{selectedProduct.description}</p>
                 </div>
-                
-                {selectedProduct.price && (
-                  <p className="modal-price">{selectedProduct.price}</p>
-                )}
-                
-                <div className="modal-footer">
-                  <p className="shipping-note">📦 Shipping charges extra</p>
+                <div className="product-shipping-info">
+                  <p>📦 Shipping charges extra</p>
+                </div>
+                <div className="product-actions">
+                  <button
+                    className="whatsapp-inquiry-btn"
+                    onClick={() => handleWhatsAppInquiry(selectedProduct)}
+                  >
+                    <svg className="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488" />
+                    </svg>
+                    Inquire on WhatsApp
+                  </button>
                 </div>
               </div>
             </div>
@@ -609,23 +511,85 @@ function App() {
         </div>
       )}
 
-      {/* Add Product Modal */}
-      {showAddProduct && (
-        <AddProduct
-          onProductAdded={handleProductAdded}
-          onClose={() => setShowAddProduct(false)}
-        />
-      )}
+      {/* Products Section */}
+      <section className="products-section">
+        <div className="container">
+          <div className="products-grid">
+            {filteredProducts.length === 0 ? (
+              <div className="no-products">
+                <p>No products found. {selectedCategories.length > 0 ? 'Try selecting different categories.' : 'Add your first product to get started!'}</p>
+              </div>
+            ) : (
+              filteredProducts.map(product => (
+                <div key={product.id} className="product-card">
+                  <div className="card-header">
+                    <span className="category-tag">{product.category}</span>
+                    <div className="card-actions">
+                      {isAdmin && (
+                        <>
+                          <button onClick={() => handleEdit(product)} className="action-btn edit-btn">
+                            ✏️
+                          </button>
+                          <button onClick={() => handleDelete(product.id)} className="action-btn delete-btn">
+                            🗑️
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    className="product-image-container clickable-image"
+                    onClick={() => openProductModal(product)}
+                  >
+                    <ImageCarousel
+                      images={product.imagePreviews || []}
+                      productName={product.name}
+                    />
+                  </div>
+                  <div className="product-info">
+                    <h4 className="product-name">{product.name}</h4>
+                    <p className="product-description">{product.description}</p>
+                    <div className="product-price">₹{product.price.toLocaleString()}</div>
+                    <div className="shipping-info">
+                      📦 Shipping charges extra
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="App-footer">
-        <div className="footer-content">
-          <p>&copy; 2024 Craftified Memories. Made with ❤️ for your special moments.</p>
-          <p>Contact us to bring your ideas to life!</p>
+      <footer className="footer">
+        <div className="footer-container">
+          <div className="footer-brand">
+            <div className="footer-logo">
+              <img src={logo} alt="Craftified Memories Logo" className="footer-logo-image" />
+              <span className="footer-text">© 2024 Craftified Memories - Handcrafted with Love</span>
+            </div>
+            <div className="footer-social">
+              <a href="https://wa.me/9550266837" target="_blank" rel="noopener noreferrer" className="footer-social-link whatsapp">
+                💬 WhatsApp Us
+              </a>
+              <a href="https://www.instagram.com/craftifiedmemories/" target="_blank" rel="noopener noreferrer" className="footer-social-link instagram">
+                📷 @craftifiedmemories
+              </a>
+            </div>
+          </div>
+          <div className="shipping-info-section">
+            <div className="shipping-header">
+              📦 Shipping Information
+            </div>
+            <p className="shipping-details">
+              Shipping charges are extra for all products. Please contact us for shipping details and rates.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
   );
-}
+};
 
 export default App;
