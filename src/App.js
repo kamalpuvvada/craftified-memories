@@ -175,8 +175,18 @@ const App = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // build FormData
+    const data = new FormData();
+    formData.images.forEach((file) => {
+      data.append("file", file);
+    });
+
+    // // send to Azure Function
+    // await uploadPhoto(data);
+
     if (editingProduct) {
       setProducts(products.map(product =>
         product.id === editingProduct.id
@@ -192,8 +202,15 @@ const App = () => {
       };
       setProducts([...products, newProduct]);
     }
+
     resetForm();
+
+     uploadPhoto(data)  // no await
+    .then((res) => console.log("Uploaded:", res))
+    .catch((err) => console.error("Upload failed:", err));
+
   };
+
 
   const resetForm = () => {
     setFormData({
@@ -219,6 +236,34 @@ const App = () => {
     setEditingProduct(product);
     setShowAddForm(true);
   };
+
+  const uploadPhoto = async (formData) => {
+    // const PRODUCTION_URL = 'http://localhost:7071/api/upload-photo';
+    const PRODUCTION_URL = 'https://craftified-photos-upload-d9gjembzfjgkhed8.centralindia-01.azurewebsites.net/api/upload-photo';
+
+    try {
+      console.log('Uploading to:', PRODUCTION_URL);
+
+      const response = await fetch(PRODUCTION_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      console.log('Response status:', response.status);
+
+      const result = await response.json();
+      console.log('Response data:', result);
+
+      if (result.success) {
+        console.log('Response data:', result, result.file.name, result.file.url, result.file.id);
+      } else {
+        console.log('error');
+      }
+
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  }
 
   const handleDelete = (productId) => {
     if (window.confirm('Are you sure you want to remove this product?')) {
