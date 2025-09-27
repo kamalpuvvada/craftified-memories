@@ -151,6 +151,36 @@ const App = () => {
     }
   }, [showProductModal]);
 
+  // Fetch uploaded photos from Azure Function
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      try {
+        const response = await fetch(
+          "https://craftified-photos-upload-xxxxx.centralindia-01.azurewebsites.net/api/list-photos?code=<FUNCTION_KEY>"
+        );
+        const data = await response.json();
+        console.log("Fetched photos:", data);
+
+        // Map blobs into product format
+        const fetchedProducts = data.map((photo, index) => ({
+          id: index,
+          name: photo.name,
+          price: 0,
+          description: "Uploaded photo",
+          category: "Uncategorized",
+          imagePreviews: [photo.url] // use blob URL
+        }));
+
+        setProducts(fetchedProducts);
+      } catch (err) {
+        console.error("Error fetching photos:", err);
+      }
+    };
+
+    fetchPhotos();
+  }, []);
+
+
   const handleMultipleImageUpload = (e) => {
     const files = Array.from(e.target.files);
 
@@ -205,9 +235,9 @@ const App = () => {
 
     resetForm();
 
-     uploadPhoto(data)  // no await
-    .then((res) => console.log("Uploaded:", res))
-    .catch((err) => console.error("Upload failed:", err));
+    uploadPhoto(data)  // no await
+      .then((res) => console.log("Uploaded:", res))
+      .catch((err) => console.error("Upload failed:", err));
 
   };
 
