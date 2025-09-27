@@ -214,6 +214,12 @@ const App = () => {
       data.append("file", file);
     });
 
+    // Add product details
+    data.append("productName", formData.name);
+    data.append("price", formData.price);
+    data.append("category", formData.category);
+    data.append("description", formData.description);
+
     // // send to Azure Function
     // await uploadPhoto(data);
 
@@ -268,8 +274,8 @@ const App = () => {
   };
 
   const uploadPhoto = async (formData) => {
-    // const PRODUCTION_URL = 'http://localhost:7071/api/upload-photo';
-    const PRODUCTION_URL = 'https://craftified-photos-upload-d9gjembzfjgkhed8.centralindia-01.azurewebsites.net/api/upload-photo';
+    const PRODUCTION_URL = 'http://localhost:7071/api/upload-photo';
+    // const PRODUCTION_URL = 'https://craftified-photos-upload-d9gjembzfjgkhed8.centralindia-01.azurewebsites.net/api/upload-photo';
 
     try {
       console.log('Uploading to:', PRODUCTION_URL);
@@ -285,7 +291,7 @@ const App = () => {
       console.log('Response data:', result);
 
       if (result.success) {
-        console.log('Response data:', result, result.file.name, result.file.url, result.file.id);
+        console.log('Response data:', result);
       } else {
         console.log('error');
       }

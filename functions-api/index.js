@@ -92,54 +92,89 @@ app.http('upload-photo', {
                     };
                 }
 
-                context.log('File found:', filePart.filename, 'size:', filePart.data.length);
-
-                //step1: upload to blob storage
-                const storageConnectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-
-                if (!storageConnectionString) {
-                    return {
-                        status: 400,
-                        jsonBody: {
-                            success: false,
-                            error: 'Storage connection string not found'
-                        }
-                    };
-                }
-
-                const blobServiceClient = BlobServiceClient.fromConnectionString(storageConnectionString);
-                const containerName = 'photos'
-                const containerClient = blobServiceClient.getContainerClient(containerName);
-
-                //create container if doesn't exist
-                await containerClient.createIfNotExists({ access: 'blob' });
-
-                // generate unique file name
-                const timeStamp = Date.now();
-                // Sanitize filename for Azure Blob Storage
-                const sanitizeFilename = (filename) => {
-                    return filename
-                        .toLowerCase()                    // Convert to lowercase
-                        .replace(/[^a-z0-9.-]/g, '-')    // Replace invalid chars with hyphens
-                        .replace(/-+/g, '-')             // Replace multiple hyphens with single
-                        .replace(/^-|-$/g, '')           // Remove leading/trailing hyphens
-                        .substring(0, 200);              // Limit length
-                };
-
-                const sanitizedFilename = sanitizeFilename(filePart.filename);
-                context.log('fileName:', filePart.filename, 'sanitized:', sanitizeFilename);
-                const fileName = `${timeStamp}-${sanitizedFilename}`;
-                const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-
-                //upload file
-                context.log("Uploading to Azure blob storage");
-
-                await blockBlobClient.upload(filePart.data, filePart.data.length, {
-                    blobHTTPHeaders: { blobContentType: filePart.type }
+                // Log all received parts
+                context.log('Parsed multipart parts:');
+                parts.forEach((part, index) => {
+                    context.log(`Part ${index + 1}:`);
+                    context.log('  filename:', part.filename);   // will be undefined for text fields
+                    context.log('  name:', part.name);           // the field name
+                    context.log('  type:', part.type);           // MIME type
+                    if (!part.filename) {
+                        // for text fields, log the text content
+                        context.log('  value:', part.data.toString('utf8'));
+                    } else {
+                        // for files, just log the size
+                        context.log('  file size:', part.data.length);
+                    }
                 });
 
-                const imageUrl = blockBlobClient.url;
-                context.log('Image uploaded to:', imageUrl);
+                const textFields = {};
+                parts.forEach(part => {
+                    if (!part.filename) {
+                        textFields[part.name] = part.data.toString('utf8');
+                    }
+                });
+
+                const images = [];
+                const fileNames = [];
+                const originalNames = [];
+
+                for (const fp of parts) {
+                    if (fp.filename) {
+
+                        context.log('File found:', fp.filename, 'size:', fp.data.length);
+
+                        //step1: upload to blob storage
+                        const storageConnectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+
+                        if (!storageConnectionString) {
+                            return {
+                                status: 400,
+                                jsonBody: {
+                                    success: false,
+                                    error: 'Storage connection string not found'
+                                }
+                            };
+                        }
+
+                        const blobServiceClient = BlobServiceClient.fromConnectionString(storageConnectionString);
+                        const containerName = 'photos'
+                        const containerClient = blobServiceClient.getContainerClient(containerName);
+
+                        //create container if doesn't exist
+                        await containerClient.createIfNotExists({ access: 'blob' });
+
+                        // generate unique file name
+                        const timeStamp = Date.now();
+                        // Sanitize filename for Azure Blob Storage
+                        const sanitizeFilename = (filename) => {
+                            return filename
+                                .toLowerCase()                    // Convert to lowercase
+                                .replace(/[^a-z0-9.-]/g, '-')    // Replace invalid chars with hyphens
+                                .replace(/-+/g, '-')             // Replace multiple hyphens with single
+                                .replace(/^-|-$/g, '')           // Remove leading/trailing hyphens
+                                .substring(0, 200);              // Limit length
+                        };
+
+                        const sanitizedFilename = sanitizeFilename(filePart.filename);
+                        context.log('fileName:', fp.filename, 'sanitized:', sanitizeFilename);
+                        const fileName = `${timeStamp}-${sanitizedFilename}`;
+                        const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+
+                        //upload file
+                        context.log("Uploading to Azure blob storage");
+
+                        await blockBlobClient.upload(fp.data, fp.data.length, {
+                            blobHTTPHeaders: { blobContentType: fp.type }
+                        });
+
+                        const imageUrl = blockBlobClient.url;
+                        context.log('Image uploaded to:', imageUrl);
+                        images.push(imageUrl);
+                        fileNames.push(fileName);
+                        originalNames.push(fp.filename);
+                    }
+                }
 
                 //step 2:save metadata to cosmos db
                 const cosmosConnectionString = process.env.COSMOS_DB_CONNECTION_STRING;
@@ -158,10 +193,14 @@ app.http('upload-photo', {
                 const container = database.container('Products');
 
                 const productData = {
-                    id: timeStamp.toString(),
-                    fileName: fileName,
-                    originalName: filePart.filename,
-                    imageUrl: imageUrl,
+                    id: Date.now().toString(),
+                    productName: textFields.productName || 'Unnamed Product',
+                    price: Number(textFields.price) || 0,
+                    category: textFields.category || 'Uncategorized',
+                    description: textFields.description || '',
+                    fileNames:fileNames,
+                    originalNames: originalNames,
+                    images: images,
                     fileSize: filePart.data.length,
                     fileType: filePart.type,
                     uploadedAt: new Date().toISOString(),
@@ -178,14 +217,8 @@ app.http('upload-photo', {
                     status: 200,
                     jsonBody: {
                         success: true,
-                        message: 'File upload parsed successfully!',
-                        file: {
-                            id: resource.id,
-                            name: filePart.name,
-                            size: filePart.data.length,
-                            type: filePart.type,
-                            imageUrl: imageUrl
-                        }
+                        message: 'Files upload parsed successfully!',
+                        images: images
                     }
                 };
             }
