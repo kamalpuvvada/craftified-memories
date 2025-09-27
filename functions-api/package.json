@@ -1,15 +1,14 @@
 {
   "name": "craftified-functions",
   "version": "1.0.0",
-  "description": "",
-  "main": "upload-photo/*.js",
+  "description": "Craftified Memories Azure Functions",
+  "main": "index.js",
   "scripts": {
     "start": "func start",
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
-    "@azure/cosmos": "^4.5.1",
-    "@azure/functions": "^4.0.0",
+    "@azure/functions": "^4.8.0",
     "@azure/storage-blob": "^12.28.0",
     "parse-multipart-data": "^1.5.0"
   },
